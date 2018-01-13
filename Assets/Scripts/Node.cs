@@ -4,9 +4,14 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Linq;
+using System;
 
 public class Node : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler, IPointerClickHandler
 {
+	public int index { get; private set; }
+	private static event Action onNodesChanged;
+	private static int _globalIndexer;
+
 	public void OnDrag(PointerEventData eventData)
 	{
 		if (eventData.button == PointerEventData.InputButton.Middle)
@@ -25,7 +30,7 @@ public class Node : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
 	{
 		if (eventData.button != PointerEventData.InputButton.Left)
 			return;
-			
+
 		Factory.instance.ghostEdge.gameObject.SetActive(false);
 		List<RaycastResult> results = new List<RaycastResult>();
 		Canvas canvas = FindObjectOfType<Canvas>();
@@ -46,5 +51,28 @@ public class Node : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
 	{
 		if (eventData.button == PointerEventData.InputButton.Right)
 			Destroy(gameObject);
+	}
+
+	private void Awake()
+	{
+		_globalIndexer = 0;
+		onNodesChanged += RecalcilateIndex;
+		Analysis.instance.RegisterNode(this);
+		onNodesChanged?.Invoke();
+	}
+
+	private void OnDestroy()
+	{
+		_globalIndexer = 0;
+		onNodesChanged -= RecalcilateIndex;
+		Analysis.instance.UnregisterNode(this);
+		onNodesChanged?.Invoke();
+	}
+
+	private void RecalcilateIndex()
+	{
+		index = _globalIndexer;
+		_globalIndexer++;
+		GetComponentInChildren<Text>().text = "V" + index.ToString();
 	}
 }

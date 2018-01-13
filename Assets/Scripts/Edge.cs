@@ -9,15 +9,6 @@ public class Edge : MonoBehaviour, IPointerClickHandler
 	public Node from, to;
 	public EdgeType type = EdgeType.None;
 
-	private void Update()
-	{
-		if (!from || !to)
-			Destroy(gameObject);
-		else
-			RecalculatePosition();
-
-	}
-
 	public void OnPointerClick(PointerEventData eventData)
 	{
 		if (eventData.button == PointerEventData.InputButton.Left)
@@ -39,6 +30,24 @@ public class Edge : MonoBehaviour, IPointerClickHandler
 		type = (EdgeType)Mathf.Repeat((int)type + 1, 4);
 		for (int x = 0; x < transform.childCount; x++)
 			transform.GetChild(x).gameObject.SetActive((int)type == x);
+	}
+
+	private void Update()
+	{
+		if (!from || !to)
+			Destroy(gameObject);
+		else
+			RecalculatePosition();
+	}
+
+	private void Awake()
+	{
+		Analysis.instance.RegisterEdge(this);
+	}
+
+	private void Destroy()
+	{
+		Analysis.instance.UnregisterEdge(this);
 	}
 
 	public enum EdgeType
