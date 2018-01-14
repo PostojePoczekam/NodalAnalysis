@@ -16,38 +16,41 @@ public class Analysis : MonoBehaviour
 	}
 	private static Analysis _instance;
 
-	private List<NodeBehaviour> _nodes = new List<NodeBehaviour>();
-	private List<EdgeBehaviour> _edges = new List<EdgeBehaviour>();
+	public List<Edge> _edges = new List<Edge>();
 
-	private void OnGUI()
+	private void Update()
 	{
-		Event e = Event.current;
-		if (e.type != EventType.MouseDown)
-			return;
-		Recalculate();
-		GenerateMatrix();
+		int nodesCount = Recalculate();
+		GenerateMatrix(nodesCount);
 	}
 
-	private void GenerateMatrix()
+	private void GenerateMatrix(int nodesCount)
 	{
-		if (_nodes.Count == 0)
+		if (nodesCount == 0)
 			return;
-		float[,] matrix = new float[_nodes.Count, _nodes.Count];
-		for (int x = 0; x < _edges.Count; x++)
+
+		float[,] matrix = new float[nodesCount + 1, nodesCount];
+		foreach (var edge in _edges)
 		{
-			if (_edges[x].type == EdgeType.Resistor)
+			if (edge.type == EdgeType.Resistor)
 			{
-				// matrix[_edges[x].from.index, _edges[x].from.index] += 1f;
-				// matrix[_edges[x].to.index, _edges[x].to.index] += 1f;
-				// matrix[_edges[x].from.index, _edges[x].to.index] += 1f;
-				// matrix[_edges[x].to.index, _edges[x].from.index] += 1f;
+				matrix[edge.from, edge.from] += 1f / edge.value;
+				matrix[edge.to, edge.to] += 1f / edge.value;
+				matrix[edge.from, edge.to] -= 1f / edge.value;
+				matrix[edge.to, edge.from] -= 1f / edge.value;
+			}
+			if (edge.type == EdgeType.Current)
+			{
+				matrix[nodesCount, edge.from] += edge.value;
+				matrix[nodesCount, edge.to] += edge.value;
+
 			}
 		}
 
 		string output = "";
-		for (int y = 0; y < _nodes.Count; y++)
+		for (int y = 0; y < nodesCount; y++)
 		{
-			for (int x = 0; x < _nodes.Count; x++)
+			for (int x = 0; x < nodesCount + 1; x++)
 				output = string.Join("|", output, matrix[x, y].ToString());
 			output = string.Concat(output, "|\n");
 		}
@@ -55,21 +58,23 @@ public class Analysis : MonoBehaviour
 		Debug.Log(output);
 	}
 
-	private void Recalculate()
+	private int Recalculate()
 	{
-		Debug.Log(1);
-		// int? index = 0;
-		// foreach (var node in Node.nodes)
-		// {
-		// 	node.index = null;
-		// 	foreach (var edge in _edges)
-		// 	{
-		// 		if (edge.type != Edge.EdgeType.None && (edge.from == node || edge.to == node))
-		// 		{
-		// 			node.index = index++;
-		// 			continue;
-		// 		}
-		// 	}
-		// }
+		_edges.Clear();
+		int index = 0;
+		foreach (var node in NodeBehaviour.nodes)
+		{
+			node.index = null;
+			foreach (var edge in EdgeBehaviour.edges)
+				if (edge.type != EdgeType.None && (edge.from == node || edge.to == node))
+					if (node.index == null)
+						node.index = index++;
+		}
+
+		foreach (var edge in EdgeBehaviour.edges)
+			if (edge.type != EdgeType.None)
+				_edges.Add(new Edge() { from = (int)edge.from.index, to = (int)edge.to.index, type = edge.type, value = edge.value });
+
+		return index;
 	}
 }
