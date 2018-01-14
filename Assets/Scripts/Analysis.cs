@@ -15,35 +15,16 @@ public class Analysis : MonoBehaviour
 		}
 	}
 	private static Analysis _instance;
-	private List<Node> _nodes = new List<Node>();
-	private List<Edge> _edges = new List<Edge>();
 
-	public void RegisterNode(Node node)
-	{
-		if (!_nodes.Contains(node))
-			_nodes.Add(node);
-	}
+	private List<NodeBehaviour> _nodes = new List<NodeBehaviour>();
+	private List<EdgeBehaviour> _edges = new List<EdgeBehaviour>();
 
-	public void UnregisterNode(Node node)
+	private void OnGUI()
 	{
-		if (_nodes.Contains(node))
-			_nodes.Remove(node);
-	}
-
-	public void RegisterEdge(Edge edge)
-	{
-		if (!_edges.Contains(edge))
-			_edges.Add(edge);
-	}
-
-	public void UnregisterEdge(Edge edge)
-	{
-		if (_edges.Contains(edge))
-			_edges.Remove(edge);
-	}
-
-	private void Update()
-	{
+		Event e = Event.current;
+		if (e.type != EventType.MouseDown)
+			return;
+		Recalculate();
 		GenerateMatrix();
 	}
 
@@ -54,12 +35,13 @@ public class Analysis : MonoBehaviour
 		float[,] matrix = new float[_nodes.Count, _nodes.Count];
 		for (int x = 0; x < _edges.Count; x++)
 		{
-			if (_edges[x].type != Edge.EdgeType.Resistor)
-				continue;
-			matrix[_edges[x].from.index, _edges[x].from.index] += 1f;
-			matrix[_edges[x].to.index, _edges[x].to.index] += 1f;
-			matrix[_edges[x].from.index, _edges[x].to.index] += 1f;
-			matrix[_edges[x].to.index, _edges[x].from.index] += 1f;
+			if (_edges[x].type == EdgeType.Resistor)
+			{
+				// matrix[_edges[x].from.index, _edges[x].from.index] += 1f;
+				// matrix[_edges[x].to.index, _edges[x].to.index] += 1f;
+				// matrix[_edges[x].from.index, _edges[x].to.index] += 1f;
+				// matrix[_edges[x].to.index, _edges[x].from.index] += 1f;
+			}
 		}
 
 		string output = "";
@@ -71,5 +53,23 @@ public class Analysis : MonoBehaviour
 		}
 
 		Debug.Log(output);
+	}
+
+	private void Recalculate()
+	{
+		Debug.Log(1);
+		// int? index = 0;
+		// foreach (var node in Node.nodes)
+		// {
+		// 	node.index = null;
+		// 	foreach (var edge in _edges)
+		// 	{
+		// 		if (edge.type != Edge.EdgeType.None && (edge.from == node || edge.to == node))
+		// 		{
+		// 			node.index = index++;
+		// 			continue;
+		// 		}
+		// 	}
+		// }
 	}
 }

@@ -6,11 +6,21 @@ using UnityEngine.EventSystems;
 using System.Linq;
 using System;
 
-public class Node : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler, IPointerClickHandler
+public class NodeBehaviour : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler, IPointerClickHandler
 {
-	public int index { get; private set; }
-	private static event Action onNodesChanged;
-	private static int _globalIndexer;
+	public int? index
+	{
+		set
+		{
+			Text label = GetComponentInChildren<Text>();
+			if (value == null)
+				label.text = "";
+			else
+				label.text = "V" + value.ToString();
+		}
+	}
+
+	public static List<NodeBehaviour> nodes { get; private set; } = new List<NodeBehaviour>();
 
 	public void OnDrag(PointerEventData eventData)
 	{
@@ -37,12 +47,10 @@ public class Node : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
 		canvas.GetComponent<GraphicRaycaster>().Raycast(eventData, results);
 		if (results.Count == 0)
 			return;
-		Node node = results[0].gameObject.GetComponent<Node>();
-		if (node == null)
+		NodeBehaviour node = results[0].gameObject.GetComponent<NodeBehaviour>();
+		if (node == null || node == this)
 			return;
-		if (node == this)
-			return;
-		if (FindObjectsOfType<Edge>().Where(e => (e.from == this && e.to == node) || e.from == node && e.to == this).ToArray().Length != 0)
+		if (FindObjectsOfType<EdgeBehaviour>().Where(e => (e.from == this && e.to == node) || e.from == node && e.to == this).ToArray().Length != 0)
 			return;
 		Factory.instance.CreateEdge(this, node);
 	}
@@ -55,24 +63,13 @@ public class Node : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
 
 	private void Awake()
 	{
-		_globalIndexer = 0;
-		onNodesChanged += RecalcilateIndex;
-		Analysis.instance.RegisterNode(this);
-		onNodesChanged?.Invoke();
+		if (!nodes.Contains(this))
+			nodes.Add(this);
 	}
 
 	private void OnDestroy()
 	{
-		_globalIndexer = 0;
-		onNodesChanged -= RecalcilateIndex;
-		Analysis.instance.UnregisterNode(this);
-		onNodesChanged?.Invoke();
-	}
-
-	private void RecalcilateIndex()
-	{
-		index = _globalIndexer;
-		_globalIndexer++;
-		GetComponentInChildren<Text>().text = "V" + index.ToString();
+		if (nodes.Contains(this))
+			nodes.Remove(this);
 	}
 }

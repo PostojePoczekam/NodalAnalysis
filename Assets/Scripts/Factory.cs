@@ -28,9 +28,9 @@ public class Factory : MonoBehaviour, IPointerClickHandler
 		node.SetActive(true);
 	}
 
-	public void CreateEdge(Node from, Node to)
+	public void CreateEdge(NodeBehaviour from, NodeBehaviour to)
 	{
-		Edge edge = Instantiate(edgePrefab).GetComponent<Edge>();
+		EdgeBehaviour edge = Instantiate(edgePrefab).GetComponent<EdgeBehaviour>();
 		edge.transform.SetParent(GameObject.Find("Edges").transform);
 		edge.gameObject.name = "Edge";
 		edge.gameObject.SetActive(true);

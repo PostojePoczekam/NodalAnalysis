@@ -4,10 +4,13 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-public class Edge : MonoBehaviour, IPointerClickHandler
+public class EdgeBehaviour : MonoBehaviour, IPointerClickHandler
 {
-	public Node from, to;
+	public NodeBehaviour from, to;
 	public EdgeType type = EdgeType.None;
+	public float value = 0f;
+
+	public static List<EdgeBehaviour> edges { get; private set; } = new List<EdgeBehaviour>();
 
 	public void OnPointerClick(PointerEventData eventData)
 	{
@@ -42,19 +45,13 @@ public class Edge : MonoBehaviour, IPointerClickHandler
 
 	private void Awake()
 	{
-		Analysis.instance.RegisterEdge(this);
+		if (!edges.Contains(this))
+			edges.Add(this);
 	}
 
-	private void Destroy()
+	private void OnDestroy()
 	{
-		Analysis.instance.UnregisterEdge(this);
-	}
-
-	public enum EdgeType
-	{
-		Resistor = 0,
-		Voltage,
-		Current,
-		None
+		if (edges.Contains(this))
+			edges.Remove(this);
 	}
 }
