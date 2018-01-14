@@ -8,7 +8,7 @@ public class EdgeBehaviour : MonoBehaviour, IPointerClickHandler
 {
 	public NodeBehaviour from, to;
 	public EdgeType type = EdgeType.None;
-	public float value = 0.1f;
+	public float value = 1;
 
 	//Workaround not to use FindObjectsOfType cuz it's slow
 	public static List<EdgeBehaviour> edges { get; private set; } = new List<EdgeBehaviour>();
@@ -22,7 +22,7 @@ public class EdgeBehaviour : MonoBehaviour, IPointerClickHandler
 			Destroy(gameObject);
 
 		if (eventData.button == PointerEventData.InputButton.Middle)
-			value = Mathf.Repeat(value, 0.9f) + 0.1f;
+			value = Mathf.Repeat(value, 20) + 1;
 
 		UpdateLabel();
 	}
@@ -31,7 +31,7 @@ public class EdgeBehaviour : MonoBehaviour, IPointerClickHandler
 	{
 		transform.position = (from.transform.position + to.transform.position) / 2f;
 		transform.right = from.transform.position - to.transform.position;
-		(transform as RectTransform).sizeDelta = new Vector2(Vector2.Distance(from.transform.position, to.transform.position), 10);
+		(transform as RectTransform).sizeDelta = new Vector2(Vector2.Distance(from.transform.position, to.transform.position), 20);
 	}
 
 	private void RecalculateType()
@@ -46,9 +46,9 @@ public class EdgeBehaviour : MonoBehaviour, IPointerClickHandler
 	private void UpdateLabel()
 	{
 		if (type == EdgeType.Resistor)
-			transform.GetChild(1).GetComponent<Text>().text = value.ToString("0.0") + " O";
+			transform.GetChild(1).GetComponent<Text>().text = value.ToString("0") + "k";
 		if (type == EdgeType.Current)
-			transform.GetChild(1).GetComponent<Text>().text = value.ToString("0.0") + " A";
+			transform.GetChild(1).GetComponent<Text>().text = value.ToString("0") + "mA";
 	}
 
 	private void Update()

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class Analysis : MonoBehaviour
 {
@@ -23,39 +24,47 @@ public class Analysis : MonoBehaviour
 		int nodesCount = Recalculate();
 		GenerateMatrix(nodesCount);
 	}
+	public float[] v;
 
 	private void GenerateMatrix(int nodesCount)
 	{
 		if (nodesCount == 0)
 			return;
 
-		float[,] matrix = new float[nodesCount + 1, nodesCount];
+		float[,] g = new float[nodesCount, nodesCount];
+		float[] i = new float[nodesCount];
+		v = new float[nodesCount];
+
 		foreach (var edge in _edges)
 		{
 			if (edge.type == EdgeType.Resistor)
 			{
-				matrix[edge.from, edge.from] += 1f / edge.value;
-				matrix[edge.to, edge.to] += 1f / edge.value;
-				matrix[edge.from, edge.to] -= 1f / edge.value;
-				matrix[edge.to, edge.from] -= 1f / edge.value;
+				g[edge.from, edge.from] += 1f / edge.value;
+				g[edge.to, edge.to] += 1f / edge.value;
+				g[edge.from, edge.to] -= 1f / edge.value;
+				g[edge.to, edge.from] -= 1f / edge.value;
 			}
 			if (edge.type == EdgeType.Current)
 			{
-				matrix[nodesCount, edge.from] += edge.value;
-				matrix[nodesCount, edge.to] += edge.value;
-
+				i[edge.from] += edge.value;
+				i[edge.to] += edge.value;
 			}
 		}
 
-		string output = "";
-		for (int y = 0; y < nodesCount; y++)
-		{
-			for (int x = 0; x < nodesCount + 1; x++)
-				output = string.Join("|", output, matrix[x, y].ToString());
-			output = string.Concat(output, "|\n");
-		}
+		float[,] w = new float[nodesCount - 1, nodesCount - 1];
+		for (int x = 1; x < nodesCount; x++)
+			for (int y = 1; y < nodesCount; y++)
+				w[x - 1, y - 1] = g[x, y];
 
-		Debug.Log(output);
+		float determinant = LinearEquationSolver.MatrixDeterminant(w);
+		// for (int x = 1; x < nodesCount; x++)
+		// {
+		float[,] vw = (float[,])w.Clone();
+		for (int y = 1; y < nodesCount; y++)
+			vw[1 - 1, y - 1] = i[1];
+		v[1] = LinearEquationSolver.MatrixDeterminant(vw) / determinant;
+		//}
+
 	}
 
 	private int Recalculate()
