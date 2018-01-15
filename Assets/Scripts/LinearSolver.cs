@@ -13,7 +13,7 @@
 			float[,] w = (float[,])g.Clone();
 			for (int y = 0; y < l; y++)
 				w[x, y] = i[y];
-			float? determinantV = LinearEquationSolver.MatrixDeterminant(w);
+			float? determinantV = CalculateDeterminant(w);
 			if (determinantV == null)
 				return null;
 
