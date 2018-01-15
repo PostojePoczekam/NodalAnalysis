@@ -19,21 +19,21 @@ public class Analysis : MonoBehaviour
 
 	public List<Edge> _edges = new List<Edge>();
 
+	public int val = 0;
 	private void Update()
 	{
-		int nodesCount = Recalculate();
-		GenerateMatrix(nodesCount);
+		int nodesCount = CountNodes();
+		CalculateNodes(nodesCount);
 	}
-	public float[] v;
 
-	private void GenerateMatrix(int nodesCount)
+	private void CalculateNodes(int nodesCount)
 	{
 		if (nodesCount == 0)
 			return;
 
 		float[,] g = new float[nodesCount, nodesCount];
 		float[] i = new float[nodesCount];
-		v = new float[nodesCount];
+
 
 		foreach (var edge in _edges)
 		{
@@ -46,34 +46,40 @@ public class Analysis : MonoBehaviour
 			}
 			if (edge.type == EdgeType.Current)
 			{
-				i[edge.from] += edge.value;
+				i[edge.from] -= edge.value;
 				i[edge.to] += edge.value;
 			}
 		}
 
-		float[,] w = new float[nodesCount - 1, nodesCount - 1];
+		float[,] gx = new float[nodesCount - 1, nodesCount - 1];
+		float[] ix = new float[nodesCount - 1];
 		for (int x = 1; x < nodesCount; x++)
+		{
 			for (int y = 1; y < nodesCount; y++)
-				w[x - 1, y - 1] = g[x, y];
+			{
+				gx[x - 1, y - 1] = g[x, y];
+			}
+			ix[x - 1] = i[x];
+		}
 
-		float determinant = LinearEquationSolver.MatrixDeterminant(w);
-		// for (int x = 1; x < nodesCount; x++)
-		// {
-		float[,] vw = (float[,])w.Clone();
-		for (int y = 1; y < nodesCount; y++)
-			vw[1 - 1, y - 1] = i[1];
-		v[1] = LinearEquationSolver.MatrixDeterminant(vw) / determinant;
-		//}
+		float[] v = LinearSolver.Solve(gx, ix);
+		if (v == null)
+			return;
 
+		for (int x = 1; x < nodesCount; x++)
+			foreach (var node in NodeBehaviour.nodes)
+				if (node.index == x)
+					node.value = v[x - 1];
 	}
 
-	private int Recalculate()
+	private int CountNodes()
 	{
 		_edges.Clear();
 		int index = 0;
 		foreach (var node in NodeBehaviour.nodes)
 		{
 			node.index = null;
+			node.value = null;
 			foreach (var edge in EdgeBehaviour.edges)
 				if (edge.type != EdgeType.None && (edge.from == node || edge.to == node))
 					if (node.index == null)

@@ -8,23 +8,19 @@ using System;
 
 public class NodeBehaviour : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler, IPointerClickHandler
 {
-	public int? index
+	public int? index { get; set; }
+
+	public float? value
 	{
 		set
 		{
-			_index = value;
 			Text label = GetComponentInChildren<Text>();
 			if (value == null)
 				label.text = "";
 			else
-				label.text = "V" + value.ToString();
-		}
-		get
-		{
-			return _index;
+				label.text = ((float)value).ToString("0.0") + "V";
 		}
 	}
-	private int? _index = null;
 
 	//Workaround not to use FindObjectsOfType cuz it's slow
 	public static List<NodeBehaviour> nodes { get; private set; } = new List<NodeBehaviour>();
